@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 /**
  * HeroIntro.tsx — Cinematic Landing Introduction
  * 
@@ -94,6 +94,13 @@ export function HeroIntro() {
   const revealedRef = useRef<Set<number>>(new Set());
 
   const onLoaded = useCallback(() => setLoaded(true), []);
+
+  /* Fallback: if WebGL context is lost / Three.js never fires onCreated,
+     start the animation anyway after a short delay */
+  useEffect(() => {
+    const t = window.setTimeout(() => setLoaded(true), 1800);
+    return () => clearTimeout(t);
+  }, []);
 
   /* ── Main GSAP timeline ─────────────────────────────────── */
   useEffect(() => {
