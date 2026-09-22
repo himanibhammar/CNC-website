@@ -75,13 +75,17 @@ export function HeroDebris({ plane, className }: HeroDebrisProps) {
                 }}
               />
 
-              {/* Alloy body */}
+              {/* Alloy body — holographic iridescent */}
               <div
                 className={clsx(
                   "absolute inset-0",
                   shard.dark ? "shard-face-dark" : "shard-face"
                 )}
-                style={{ clipPath: SHARD_SHAPES[shard.shape] }}
+                style={{
+                  clipPath: SHARD_SHAPES[shard.shape],
+                  animationDelay: `-${shard.delay * 1.4}s`,
+                  mixBlendMode: "screen",
+                }}
               />
 
               {/* Specular sliver along the lit edge */}

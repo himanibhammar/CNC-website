@@ -8,7 +8,6 @@ import { ArrowRight } from "lucide-react";
 import { BRAND } from "@/lib/brand";
 import { HeroAtmosphere } from "./HeroAtmosphere";
 import { HeroDebris } from "./HeroDebris";
-import { HeroSubject } from "./HeroSubject";
 import { HeroHud } from "./HeroHud";
 import { PARALLAX_DEPTH } from "./hero-config";
 
@@ -40,7 +39,6 @@ export function HeroStage() {
   const line1Ref = useRef<HTMLSpanElement>(null);
   const line2Ref = useRef<HTMLSpanElement>(null);
   const ampersandRef = useRef<HTMLSpanElement>(null);
-  const subjectRef = useRef<HTMLDivElement>(null);
   const ctaRef = useRef<HTMLDivElement>(null);
   const hudRef = useRef<HTMLDivElement>(null);
 
@@ -95,7 +93,6 @@ export function HeroStage() {
         gsap.set(eyebrowRef.current, { opacity: 0, y: 18 });
         gsap.set([line1Ref.current, line2Ref.current], { yPercent: 118 });
         gsap.set(ampersandRef.current, { opacity: 0, scale: 0.45, rotate: -18 });
-        gsap.set(subjectRef.current, { opacity: 0, scale: 1.14, yPercent: 4 });
         gsap.set(ctaRef.current, { opacity: 0, y: 26 });
         gsap.set(hudRef.current, { opacity: 0 });
         gsap.set(shards, { opacity: 0, scale: 0.35 });
@@ -116,17 +113,6 @@ export function HeroStage() {
             [line1Ref.current, line2Ref.current],
             { yPercent: 0, duration: 1.5, stagger: 0.12, ease: "expo.out" },
             0.32
-          )
-          .to(
-            subjectRef.current,
-            {
-              opacity: 1,
-              scale: 1,
-              yPercent: 0,
-              duration: 2,
-              ease: "power3.out",
-            },
-            0.5
           )
           .to(
             shards,
@@ -174,14 +160,6 @@ export function HeroStage() {
           });
         });
 
-        gsap.to(subjectRef.current, {
-          y: -14,
-          duration: 7.5,
-          repeat: -1,
-          yoyo: true,
-          ease: "sine.inOut",
-        });
-
         /* ---------------------------------------------------------------
            3. Pointer parallax — depth-weighted, interpolated, never snappy.
            ------------------------------------------------------------- */
@@ -189,7 +167,6 @@ export function HeroStage() {
           { el: atmosphereRef.current, depth: PARALLAX_DEPTH.atmosphere },
           { el: line1Ref.current?.parentElement ?? null, depth: PARALLAX_DEPTH.headline },
           { el: line2Ref.current?.parentElement ?? null, depth: PARALLAX_DEPTH.headline * 1.15 },
-          { el: subjectRef.current, depth: PARALLAX_DEPTH.subject },
           { el: hudRef.current, depth: PARALLAX_DEPTH.hud },
           { el: planes.far ?? null, depth: 8 },
           { el: planes.mid ?? null, depth: 24 },
@@ -250,35 +227,29 @@ export function HeroStage() {
           });
 
           exit
+            // UI elements fade out early
             .to(eyebrowRef.current, { opacity: 0, y: -50, duration: 0.2 }, 0)
             .to(ctaRef.current, { opacity: 0, y: 70, duration: 0.25 }, 0)
             .to(hudRef.current, { opacity: 0, duration: 0.25 }, 0)
             // Type parts around the subject like a curtain
-            .to(line1Ref.current, { xPercent: -30, duration: 1 }, 0)
-            .to(line2Ref.current, { xPercent: 30, duration: 1 }, 0)
+            .to(line1Ref.current, { xPercent: -35, duration: 0.5 }, 0)
+            .to(line2Ref.current, { xPercent: 35, duration: 0.5 }, 0)
             .to(
               [line1Ref.current, line2Ref.current],
-              { opacity: 0, duration: 0.45 },
-              0.5
+              { opacity: 0, duration: 0.35 },
+              0.35
             )
-            // Camera pushes past the subject
-            .to(
-              subjectRef.current,
-              { scale: 1.5, yPercent: 14, duration: 1 },
-              0
-            )
-            .to(subjectRef.current, { opacity: 0, duration: 0.4 }, 0.6)
             // Debris streaks past the lens
-            .to(planes.near ?? {}, { scale: 2.1, opacity: 0, duration: 0.8 }, 0)
-            .to(planes.mid ?? {}, { scale: 1.45, opacity: 0, duration: 1 }, 0)
-            .to(planes.far ?? {}, { scale: 1.15, opacity: 0, duration: 1 }, 0)
-            // ...and the key light takes the whole frame
+            .to(planes.near ?? {}, { scale: 2.1, opacity: 0, duration: 0.8 }, 0.2)
+            .to(planes.mid ?? {}, { scale: 1.45, opacity: 0, duration: 0.8 }, 0.2)
+            .to(planes.far ?? {}, { scale: 1.15, opacity: 0, duration: 0.8 }, 0.2)
+            // Key light bloom transitions
             .to(
               atmosphereRef.current,
-              { scale: 1.6, duration: 1 },
-              0
+              { scale: 1.6, duration: 0.8 },
+              0.2
             )
-            .to(atmosphereRef.current, { opacity: 0, duration: 0.5 }, 0.5);
+            .to(atmosphereRef.current, { opacity: 0, duration: 0.4 }, 0.6);
         }
 
         return () => {
@@ -353,12 +324,7 @@ export function HeroStage() {
           {/* ---- 03 · mid debris (between type and subject) ---------- */}
           <HeroDebris plane="mid" className="z-[30]" />
 
-          {/* ---- 04 · the subject, standing on the seam -------------- */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-[19vh] z-[40] flex justify-center">
-            <HeroSubject ref={subjectRef} />
-          </div>
-
-          {/* ---- 05 · near debris (foreground, out of focus) --------- */}
+          {/* ---- 04 · near debris (foreground, out of focus) --------- */}
           <HeroDebris plane="near" className="z-[50]" />
         </div>
 
