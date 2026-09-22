@@ -65,6 +65,7 @@ export const DEPTH_TREATMENT: Record<
   near: { blur: 11, opacity: 0.5 },
 };
 
+
 export const SHARDS: Shard[] = [
   // ---- far plane -----------------------------------------------------------
   { id: "f1", depth: "far", x: 11, y: 19, size: 46, ratio: 0.42, rotate: -18, tiltX: 24, tiltY: -30, shape: 0, dark: true, drift: 7, travel: 48, delay: 0 },

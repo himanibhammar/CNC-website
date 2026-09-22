@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useRef, useEffect, useState } from "react";
 import Image from "next/image";
@@ -100,7 +100,7 @@ const EVENTS: FlagshipDef[] = [
   },
 ];
 
-// Event Nav
+// Event Nav — dots only, no numbers
 function EventNavigation({ events, activeIdx, visible }: { events: FlagshipDef[]; activeIdx: number; visible: boolean }) {
   return (
     <nav
@@ -109,13 +109,7 @@ function EventNavigation({ events, activeIdx, visible }: { events: FlagshipDef[]
       aria-label="Event navigation"
     >
       {events.map((e, i) => (
-        <div key={e.id} className="flex items-center gap-3">
-          <span
-            className="font-mono text-[9px] tracking-widest transition-all duration-300"
-            style={{ color: i === activeIdx ? e.accent : "rgba(255,255,255,0.25)" }}
-          >
-            {e.num}
-          </span>
+        <div key={e.id} className="flex items-center gap-2">
           <div
             className="rounded-full transition-all duration-500"
             style={{
@@ -334,10 +328,10 @@ export function FlagshipSection() {
                     style={{ opacity: 0.12, backgroundImage: GRAIN, backgroundSize: "180px 180px" }} />
                   {/* Caption */}
                   <div
-                    className="absolute bottom-3 font-mono text-[9px] tracking-[0.28em] text-white/35 uppercase"
+                    className="absolute bottom-3 font-mono text-[9px] tracking-[0.28em] text-white/30 uppercase"
                     style={{ [fromLeft ? "right" : "left"]: 12 }}
                   >
-                    {ev.num} / {ev.total} — C&C {ev.year}
+                    C&C {ev.year}
                   </div>
                 </div>
 
@@ -380,13 +374,10 @@ export function FlagshipSection() {
                     zIndex: 10,
                   }}
                 >
-                  {/* Number + category */}
-                  <div className="flex items-center gap-3 mb-5">
-                    <span className="font-mono text-xs tracking-[0.28em] font-semibold" style={{ color: ev.accent }}>
-                      {ev.num}
-                    </span>
-                    <span className="block h-px w-8" style={{ background: `${ev.accent}55` }} />
-                    <span className="font-mono text-[10px] tracking-[0.2em] text-white/38 uppercase">
+                  {/* Category label only — no number */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="block h-[1px] w-5" style={{ background: ev.accent }} />
+                    <span className="font-mono text-[10px] tracking-[0.22em] uppercase" style={{ color: `${ev.accent}cc` }}>
                       {ev.category.split("/")[0].trim()}
                     </span>
                   </div>
@@ -497,9 +488,8 @@ export function FlagshipSection() {
           {EVENTS.map((ev) => (
             <article key={`m-${ev.id}`} className="py-12 border-b border-white/[0.06]">
               <div className="flex items-center gap-2 mb-4">
-                <span className="font-mono text-xs tracking-[0.25em] font-medium" style={{ color: ev.accent }}>{ev.num}</span>
-                <span className="block h-px w-6" style={{ background: `${ev.accent}50` }} />
-                <span className="font-mono text-[10px] tracking-wider text-white/38 uppercase">
+                <span className="block h-[1px] w-5" style={{ background: ev.accent }} />
+                <span className="font-mono text-[10px] tracking-wider uppercase" style={{ color: `${ev.accent}cc` }}>
                   {ev.category.split("/")[0].trim()}
                 </span>
               </div>
