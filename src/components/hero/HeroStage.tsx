@@ -1,234 +1,405 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ArrowRight } from "lucide-react";
 import { BRAND } from "@/lib/brand";
-import { BrandLogo } from "@/components/ui/BrandLogo";
+import { HeroAtmosphere } from "./HeroAtmosphere";
+import { HeroDebris } from "./HeroDebris";
+import { HeroSubject } from "./HeroSubject";
+import { HeroHud } from "./HeroHud";
+import { PARALLAX_DEPTH } from "./hero-config";
 
+/** GSAP wants layout effects; SSR wants none. */
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
+/**
+ * HERO — "THE SEAM"
+ *
+ * The brand is a duality, so the stage is too: a void on the left (the
+ * challenge) meeting a blown-out key light on the right (the championship).
+ * The brand artwork stands exactly on the seam, in front of a monumental
+ * headline it partially eclipses, with machined debris suspended across three
+ * focal planes around it.
+ *
+ * Three motion systems run on it:
+ *   1. a choreographed entrance,
+ *   2. continuous pointer parallax weighted by depth,
+ *   3. a pinned scroll sequence that pushes the camera in and blows the
+ *      composition out into light as the next section arrives.
+ */
 export function HeroStage() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const artworkRef = useRef<HTMLDivElement>(null);
-  const acronymRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
-  const taglineRef = useRef<HTMLDivElement>(null);
-  const scrollCueRef = useRef<HTMLDivElement>(null);
+  const cameraRef = useRef<HTMLDivElement>(null);
+  const atmosphereRef = useRef<HTMLDivElement>(null);
+  const eyebrowRef = useRef<HTMLDivElement>(null);
+  const line1Ref = useRef<HTMLSpanElement>(null);
+  const line2Ref = useRef<HTMLSpanElement>(null);
+  const ampersandRef = useRef<HTMLSpanElement>(null);
+  const subjectRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const hudRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mm = gsap.matchMedia();
 
-    if (prefersReducedMotion) {
-      return;
-    }
+    mm.add(
+      {
+        motion: "(prefers-reduced-motion: no-preference)",
+        pinned: "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
+        reduced: "(prefers-reduced-motion: reduce)",
+      },
+      (context) => {
+        const { motion, pinned, reduced } = context.conditions as {
+          motion: boolean;
+          pinned: boolean;
+          reduced: boolean;
+        };
 
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 0.8,
-          pin: stageRef.current,
-          anticipatePin: 1,
-        },
-      });
+        const shards = gsap.utils.toArray<HTMLElement>("[data-shard]");
+        const planes = {
+          far: stageRef.current?.querySelector<HTMLElement>('[data-debris-plane="far"]'),
+          mid: stageRef.current?.querySelector<HTMLElement>('[data-debris-plane="mid"]'),
+          near: stageRef.current?.querySelector<HTMLElement>('[data-debris-plane="near"]'),
+        };
 
-      // Initial state
-      gsap.set(artworkRef.current, {
-        scale: 0.55,
-        opacity: 0.7,
-        y: 20,
-        filter: "blur(2px)",
-      });
-      gsap.set(acronymRef.current, {
-        opacity: 0,
-        y: 25,
-        scale: 0.9,
-      });
-      gsap.set(titleRef.current, {
-        opacity: 0,
-        y: 40,
-        scale: 0.95,
-      });
-      gsap.set(taglineRef.current, {
-        opacity: 0,
-        y: 20,
-      });
-      gsap.set(scrollCueRef.current, {
-        opacity: 1,
-      });
+        if (reduced) {
+          // Honour the preference completely: show the finished composition.
+          gsap.set(
+            [
+              atmosphereRef.current,
+              eyebrowRef.current,
+              subjectRef.current,
+              ctaRef.current,
+              hudRef.current,
+              ...shards,
+            ],
+            { opacity: 1, clearProps: "transform" }
+          );
+          gsap.set([line1Ref.current, line2Ref.current], { yPercent: 0 });
+          return;
+        }
 
-      // Choreographed Timeline Sequence
-      // 0 -> 20%: Artwork scales forward, increases sharpness and perspective
-      tl.to(
-        artworkRef.current,
-        {
-          scale: 1,
-          opacity: 1,
-          y: -10,
-          filter: "blur(0px)",
-          ease: "power2.out",
-          duration: 2,
-        },
-        0
-      )
-        // Scroll prompt fades out early
-        .to(
-          scrollCueRef.current,
-          {
-            opacity: 0,
-            duration: 0.8,
-          },
-          0.2
-        )
-        // 20 -> 45%: C&C acronym reveals
-        .to(
-          acronymRef.current,
-          {
+        if (!motion) return;
+
+        /* ---------------------------------------------------------------
+           1. Entrance — the rig powers up, then the subject resolves.
+           ------------------------------------------------------------- */
+        gsap.set(atmosphereRef.current, { opacity: 0, scale: 1.18 });
+        gsap.set(eyebrowRef.current, { opacity: 0, y: 18 });
+        gsap.set([line1Ref.current, line2Ref.current], { yPercent: 118 });
+        gsap.set(ampersandRef.current, { opacity: 0, scale: 0.45, rotate: -18 });
+        gsap.set(subjectRef.current, { opacity: 0, scale: 1.14, yPercent: 4 });
+        gsap.set(ctaRef.current, { opacity: 0, y: 26 });
+        gsap.set(hudRef.current, { opacity: 0 });
+        gsap.set(shards, { opacity: 0, scale: 0.35 });
+
+        const intro = gsap.timeline({
+          defaults: { ease: "power3.out" },
+          delay: 0.1,
+        });
+
+        intro
+          .to(atmosphereRef.current, {
             opacity: 1,
-            y: 0,
             scale: 1,
+            duration: 2.1,
             ease: "power2.out",
-            duration: 1.5,
-          },
-          1.2
-        )
-        // 40 -> 75%: Artwork adjusts, CHALLENGES & CHAMPIONSHIPS title enters
-        .to(
-          artworkRef.current,
-          {
-            scale: 0.85,
-            y: -50,
-            opacity: 0.9,
-            duration: 2,
-            ease: "power1.inOut",
-          },
-          2.5
-        )
-        .to(
-          acronymRef.current,
-          {
-            opacity: 0.4,
-            y: -10,
-            duration: 1.5,
-          },
-          2.7
-        )
-        .to(
-          titleRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            ease: "power2.out",
-            duration: 2,
-          },
-          2.8
-        )
-        // 70 -> 90%: Tagline settles
-        .to(
-          taglineRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            ease: "power2.out",
-            duration: 1.5,
-          },
-          4
-        )
-        // 90 -> 100%: Subtle transition towards Flagship section
-        .to(
-          [titleRef.current, taglineRef.current, artworkRef.current, acronymRef.current],
-          {
-            opacity: 0.15,
-            y: -30,
-            duration: 1.5,
-            ease: "power1.in",
-          },
-          5.5
+          })
+          .to(
+            [line1Ref.current, line2Ref.current],
+            { yPercent: 0, duration: 1.5, stagger: 0.12, ease: "expo.out" },
+            0.32
+          )
+          .to(
+            subjectRef.current,
+            {
+              opacity: 1,
+              scale: 1,
+              yPercent: 0,
+              duration: 2,
+              ease: "power3.out",
+            },
+            0.5
+          )
+          .to(
+            shards,
+            {
+              opacity: 1,
+              scale: 1,
+              duration: 1.6,
+              ease: "power2.out",
+              stagger: { each: 0.045, from: "random" },
+            },
+            0.72
+          )
+          .to(
+            ampersandRef.current,
+            {
+              opacity: 1,
+              scale: 1,
+              rotate: 0,
+              duration: 1.1,
+              ease: "back.out(2.2)",
+            },
+            1.15
+          )
+          .to(eyebrowRef.current, { opacity: 1, y: 0, duration: 1.2 }, 1.25)
+          .to(ctaRef.current, { opacity: 1, y: 0, duration: 1.2 }, 1.45)
+          .to(hudRef.current, { opacity: 1, duration: 1.4 }, 1.5);
+
+        /* ---------------------------------------------------------------
+           2. Idle drift — nothing in a vacuum sits perfectly still.
+           ------------------------------------------------------------- */
+        shards.forEach((shard) => {
+          const drift = Number(shard.dataset.drift ?? 10);
+          const travel = Number(shard.dataset.travel ?? 30);
+          const delay = Number(shard.dataset.delay ?? 0);
+
+          gsap.to(shard, {
+            y: travel,
+            x: travel * 0.35,
+            rotation: travel * 0.12,
+            duration: drift,
+            delay,
+            repeat: -1,
+            yoyo: true,
+            ease: "sine.inOut",
+          });
+        });
+
+        gsap.to(subjectRef.current, {
+          y: -14,
+          duration: 7.5,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+
+        /* ---------------------------------------------------------------
+           3. Pointer parallax — depth-weighted, interpolated, never snappy.
+           ------------------------------------------------------------- */
+        const parallax = [
+          { el: atmosphereRef.current, depth: PARALLAX_DEPTH.atmosphere },
+          { el: line1Ref.current?.parentElement ?? null, depth: PARALLAX_DEPTH.headline },
+          { el: line2Ref.current?.parentElement ?? null, depth: PARALLAX_DEPTH.headline * 1.15 },
+          { el: subjectRef.current, depth: PARALLAX_DEPTH.subject },
+          { el: hudRef.current, depth: PARALLAX_DEPTH.hud },
+          { el: planes.far ?? null, depth: 8 },
+          { el: planes.mid ?? null, depth: 24 },
+          { el: planes.near ?? null, depth: 58 },
+        ].filter((layer): layer is { el: HTMLElement; depth: number } =>
+          Boolean(layer.el)
         );
-    }, containerRef);
 
-    return () => ctx.revert();
+        const movers = parallax.map(({ el, depth }) => ({
+          depth,
+          x: gsap.quickTo(el, "x", { duration: 1.1, ease: "power3" }),
+          y: gsap.quickTo(el, "y", { duration: 1.1, ease: "power3" }),
+        }));
+
+        const camera = {
+          rotY: gsap.quickTo(cameraRef.current, "rotationY", {
+            duration: 1.4,
+            ease: "power3",
+          }),
+          rotX: gsap.quickTo(cameraRef.current, "rotationX", {
+            duration: 1.4,
+            ease: "power3",
+          }),
+        };
+
+        const handlePointer = (event: PointerEvent) => {
+          const nx = (event.clientX / window.innerWidth - 0.5) * 2;
+          const ny = (event.clientY / window.innerHeight - 0.5) * 2;
+
+          movers.forEach(({ depth, x, y }) => {
+            x(-nx * depth);
+            y(-ny * depth * 0.6);
+          });
+
+          camera.rotY(nx * 1.7);
+          camera.rotX(-ny * 1.1);
+        };
+
+        if (pinned) {
+          window.addEventListener("pointermove", handlePointer, { passive: true });
+        }
+
+        /* ---------------------------------------------------------------
+           4. Scroll — the camera pushes in, the type parts around the
+              subject, and the key light blows the frame out to white.
+           ------------------------------------------------------------- */
+        if (pinned) {
+          const exit = gsap.timeline({
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 1,
+              pin: stageRef.current,
+              anticipatePin: 1,
+            },
+            defaults: { ease: "none" },
+          });
+
+          exit
+            .to(eyebrowRef.current, { opacity: 0, y: -50, duration: 0.2 }, 0)
+            .to(ctaRef.current, { opacity: 0, y: 70, duration: 0.25 }, 0)
+            .to(hudRef.current, { opacity: 0, duration: 0.25 }, 0)
+            // Type parts around the subject like a curtain
+            .to(line1Ref.current, { xPercent: -30, duration: 1 }, 0)
+            .to(line2Ref.current, { xPercent: 30, duration: 1 }, 0)
+            .to(
+              [line1Ref.current, line2Ref.current],
+              { opacity: 0, duration: 0.45 },
+              0.5
+            )
+            // Camera pushes past the subject
+            .to(
+              subjectRef.current,
+              { scale: 1.5, yPercent: 14, duration: 1 },
+              0
+            )
+            .to(subjectRef.current, { opacity: 0, duration: 0.4 }, 0.6)
+            // Debris streaks past the lens
+            .to(planes.near ?? {}, { scale: 2.1, opacity: 0, duration: 0.8 }, 0)
+            .to(planes.mid ?? {}, { scale: 1.45, opacity: 0, duration: 1 }, 0)
+            .to(planes.far ?? {}, { scale: 1.15, opacity: 0, duration: 1 }, 0)
+            // ...and the key light takes the whole frame
+            .to(
+              atmosphereRef.current,
+              { scale: 1.6, duration: 1 },
+              0
+            )
+            .to(atmosphereRef.current, { opacity: 0, duration: 0.5 }, 0.5);
+        }
+
+        return () => {
+          window.removeEventListener("pointermove", handlePointer);
+        };
+      },
+      stageRef
+    );
+
+    // Layout settles only once the display face and artwork have landed.
+    const refresh = () => ScrollTrigger.refresh();
+    window.addEventListener("load", refresh);
+    const refreshTimer = window.setTimeout(refresh, 900);
+
+    return () => {
+      window.removeEventListener("load", refresh);
+      window.clearTimeout(refreshTimer);
+      mm.revert();
+    };
   }, []);
 
   return (
     <section
       ref={containerRef}
-      className="relative w-full h-[240vh] bg-[#07090e] text-white"
-      aria-label="Cinematic Brand Introduction"
+      className="relative w-full h-[180vh] md:h-[220vh]"
+      aria-label={`${BRAND.name} — cinematic introduction`}
     >
       <div
         ref={stageRef}
-        className="relative w-full h-screen flex flex-col items-center justify-center overflow-hidden px-6"
+        className="hero-stage relative h-screen w-full overflow-hidden"
       >
-        {/* Subtle Atmospheric Lighting */}
+        {/* ---- 00 · lighting rig ------------------------------------- */}
+        <HeroAtmosphere ref={atmosphereRef} />
+
         <div
-          className="glow-atmosphere w-[600px] h-[600px] bg-blue-900/30 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-          aria-hidden="true"
-        />
-        <div
-          className="glow-atmosphere w-[450px] h-[450px] bg-indigo-950/40 top-1/3 left-1/3 -translate-x-1/2 -translate-y-1/2"
-          aria-hidden="true"
-        />
+          ref={cameraRef}
+          className="absolute inset-0"
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          {/* ---- 01 · far debris ------------------------------------- */}
+          <HeroDebris plane="far" className="z-[10]" />
 
-        {/* Hero Composition Stage */}
-        <div className="relative z-10 flex flex-col items-center justify-center text-center max-w-5xl mx-auto">
-          {/* Official C&C Artwork */}
-          <div
-            ref={artworkRef}
-            className="relative mb-6 will-change-transform flex items-center justify-center"
-          >
-            <BrandLogo variant="hero" priority />
-          </div>
-
-          {/* Acronym: C&C */}
-          <div
-            ref={acronymRef}
-            className="font-mono text-sm md:text-base font-medium tracking-[0.4em] uppercase text-blue-400 mb-2 will-change-transform"
-          >
-            {BRAND.shortName}
-          </div>
-
-          {/* Full Brand Title: CHALLENGES & CHAMPIONSHIPS */}
-          <div ref={titleRef} className="will-change-transform">
-            <h1 className="font-sans text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-light tracking-tight text-neutral-100 leading-[0.95] uppercase">
-              CHALLENGES
-              <span className="block font-serif italic text-2xl sm:text-4xl md:text-6xl text-blue-400/80 my-1 md:my-2 font-normal">
-                &
+          {/* ---- 02 · monumental headline ---------------------------- */}
+          <div className="absolute inset-x-0 top-[26vh] z-[20] md:top-[27vh]">
+            <h1 className="hero-display sr-only">{BRAND.name}</h1>
+            <div aria-hidden="true" className="px-[3vw]">
+              <span className="hero-line-mask">
+                <span
+                  ref={line1Ref}
+                  className="hero-display block whitespace-nowrap will-change-transform"
+                  style={{ fontSize: "min(16.6vw, 25vh)" }}
+                >
+                  <span className="hero-display-fill">CHALLENGES</span>
+                  <span ref={ampersandRef} className="hero-amp">
+                    &amp;
+                  </span>
+                </span>
               </span>
-              CHAMPIONSHIPS
-            </h1>
+
+              <span className="hero-line-mask">
+                <span
+                  ref={line2Ref}
+                  className="hero-display hero-display-fill block whitespace-nowrap will-change-transform"
+                  style={{ fontSize: "min(14.6vw, 22vh)" }}
+                >
+                  CHAMPIONSHIPS
+                </span>
+              </span>
+            </div>
           </div>
 
-          {/* Tagline */}
-          <div
-            ref={taglineRef}
-            className="mt-6 sm:mt-8 flex items-center gap-3 will-change-transform"
-          >
-            <span className="w-8 sm:w-12 h-[1px] bg-white/20" aria-hidden="true" />
-            <p className="font-mono text-xs sm:text-sm tracking-[0.25em] text-neutral-300 uppercase">
+          {/* ---- 03 · mid debris (between type and subject) ---------- */}
+          <HeroDebris plane="mid" className="z-[30]" />
+
+          {/* ---- 04 · the subject, standing on the seam -------------- */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-[19vh] z-[40] flex justify-center">
+            <HeroSubject ref={subjectRef} />
+          </div>
+
+          {/* ---- 05 · near debris (foreground, out of focus) --------- */}
+          <HeroDebris plane="near" className="z-[50]" />
+        </div>
+
+        {/* ---- 06 · eyebrow ------------------------------------------ */}
+        <div
+          ref={eyebrowRef}
+          className="absolute inset-x-0 top-[17vh] z-[60] flex justify-center px-6 md:top-[18vh]"
+        >
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="h-[1px] w-6 bg-white/25 sm:w-12" />
+            <p className="font-mono text-[9px] tracking-[0.3em] text-neutral-400 sm:text-[11px] sm:tracking-[0.42em]">
               {BRAND.tagline}
             </p>
-            <span className="w-8 sm:w-12 h-[1px] bg-white/20" aria-hidden="true" />
+            <span className="h-[1px] w-6 bg-white/25 sm:w-12" />
           </div>
         </div>
 
-        {/* Scroll Indicator Prompt */}
+        {/* ---- 07 · calls to action ---------------------------------- */}
         <div
-          ref={scrollCueRef}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none"
+          ref={ctaRef}
+          className="absolute inset-x-0 bottom-[6vh] z-[60] flex flex-col items-center gap-5 px-6 sm:flex-row sm:justify-center sm:gap-7"
         >
-          <span className="font-mono text-[10px] tracking-[0.3em] uppercase text-neutral-400">
-            SCROLL TO EXPLORE
-          </span>
-          <div className="w-1 h-5 rounded-full bg-white/10 overflow-hidden">
-            <div className="w-full h-2 bg-blue-400/70 rounded-full animate-pulse" />
-          </div>
+          <Link href={BRAND.routes.events} className="hero-cta group">
+            <span>EXPLORE CHAMPIONSHIPS</span>
+            <ArrowRight
+              className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1"
+              aria-hidden="true"
+            />
+          </Link>
+
+          <Link href={BRAND.routes.about} className="hero-cta-ghost group">
+            <span>THE MANIFESTO</span>
+            <span
+              className="block h-[1px] w-5 bg-current transition-all duration-300 group-hover:w-8"
+              aria-hidden="true"
+            />
+          </Link>
         </div>
+
+        {/* ---- 07 · telemetry chrome --------------------------------- */}
+        <HeroHud ref={hudRef} />
       </div>
     </section>
   );
