@@ -251,7 +251,7 @@ function SplitWord({ word, refProp, className = "" }: { word: string; refProp: R
 
 // --- Main Component ----------------------------------------------------------
 export function HeroStage() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const logoWrapRef = useRef<HTMLDivElement>(null);
